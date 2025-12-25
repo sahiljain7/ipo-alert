@@ -59,7 +59,7 @@ def check_chittorgarh():
 
             if (
                 status == "open"
-                and issue_size >= 70
+                and issue_size >= 77
                 and name not in alerted
             ):
                 message = (
