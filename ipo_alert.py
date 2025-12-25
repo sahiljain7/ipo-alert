@@ -1,7 +1,6 @@
 import requests
 import json
 import os
-from bs4 import BeautifulSoup
 
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
@@ -23,54 +22,33 @@ def save_alerted(data):
     with open(ALERT_FILE, "w") as f:
         json.dump(data, f)
 
-def parse_issue_size(text):
-    """
-    Converts '₹1,200 Cr' or '120 Cr' to float
-    """
-    text = text.replace("₹", "").replace("Cr", "").replace(",", "").strip()
-    return float(text)
-
-def check_chittorgarh():
-    url = "https://www.chittorgarh.com/ipo/"
+def check_ipos():
+    url = "https://www.nseindia.com/api/ipo-current-issue"
     headers = {"User-Agent": "Mozilla/5.0"}
 
-    response = requests.get(url, headers=headers, timeout=20)
-    soup = BeautifulSoup(response.text, "html.parser")
+    response = requests.get(url, headers=headers)
+    ipos = response.json()
 
-    tables = soup.find_all("table")
     alerted = load_alerted()
 
-    for table in tables:
-        rows = table.find_all("tr")
-        for row in rows[1:]:
-            cols = row.find_all("td")
-            if len(cols) < 6:
-                continue
+    for ipo in ipos:
+        try:
+            name = ipo["companyName"]
+            issue_size = float(ipo["issueSize"].replace(",", ""))
+            status = ipo["status"].lower()
 
-            name = cols[0].get_text(strip=True)
-            issue_size_text = cols[2].get_text(strip=True)
-            status = cols[5].get_text(strip=True).lower()
-            dates = cols[4].get_text(strip=True)
-
-            try:
-                issue_size = parse_issue_size(issue_size_text)
-            except:
-                continue
-
-            if (
-                status == "open"
-                and issue_size >= 77
-                and name not in alerted
-            ):
+            if status == "open" and issue_size >= 500 and name not in alerted:
                 message = (
-                    "📢 IPO OPEN (Chittorgarh)\n\n"
+                    "📢 BIG IPO OPEN\n\n"
                     f"Name: {name}\n"
                     f"Issue Size: ₹{issue_size} Cr\n"
-                    f"Dates: {dates}"
+                    f"Dates: {ipo['issueStartDate']} → {ipo['issueEndDate']}"
                 )
                 send_telegram(message)
                 alerted.append(name)
+        except:
+            continue
 
     save_alerted(alerted)
 
-check_chittorgarh()
+check_ipos()
