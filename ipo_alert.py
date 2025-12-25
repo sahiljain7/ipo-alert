@@ -52,3 +52,4 @@ def check_ipos():
     save_alerted(alerted)
 
 check_ipos()
+send_telegram("✅ IPO Alert bot is running correctly (test message)")
