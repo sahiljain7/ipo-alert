@@ -37,7 +37,7 @@ def check_ipos():
             issue_size = float(ipo["issueSize"].replace(",", ""))
             status = ipo["status"].lower()
 
-            if status == "open" and issue_size >= 500 and name not in alerted:
+            if status == "open" and issue_size >= 77 and name not in alerted:
                 message = (
                     "📢 BIG IPO OPEN\n\n"
                     f"Name: {name}\n"
